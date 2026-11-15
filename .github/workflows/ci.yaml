@@ -52,7 +52,7 @@ jobs:
         run: dotnet ef database update --project cinema
 
       - name: Test
-        run: dotnet test --no-build --configuration Release --ignore-exit-code 8
+        run: dotnet test --no-build --configuration Release
 
   docker:
     runs-on: ubuntu-latest
