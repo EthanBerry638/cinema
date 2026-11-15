@@ -48,4 +48,36 @@ public class TripRepositoryTests(PostgresFixture fixture)
             myTrips.Select(t => t.Id).Order(),
             result.Select(t => t.Id).Order());
     }
+
+    [Fact]
+    public async Task MyTrips_ShouldReturnNoTrips_WhenUserHasNoTrips()
+    {
+        var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+        var movieId = Guid.NewGuid();
+        
+        var movie = new Movie { Id = movieId, TmdbId = Random.Shared.Next(), Title = "Test Movie Title" };
+        var someoneElsesTrip = new Trip
+        {
+            Id = Guid.NewGuid(), UserId = otherUserId, MovieId = movieId, CinemaName = "Test Name 3", 
+            Format = Format.Standard
+        };
+        
+        await using (var seedDb = _fixture.CreateDbContext())
+        {
+            seedDb.Users.AddRange(
+                new User { Id = userId, UserName = $"user-{userId}", Email = $"{userId}@test.com" },
+                new User { Id = otherUserId, UserName = $"user-{otherUserId}", Email = $"{otherUserId}@test.com" });
+            seedDb.Movies.Add(movie);
+            seedDb.Trips.Add(someoneElsesTrip);
+            await seedDb.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+        
+        await using var db = _fixture.CreateDbContext();
+        var repository = new TripRepository(db);
+
+        var result = await repository.MyTrips(userId);
+        
+        Assert.Empty(result);
+    }
 }
