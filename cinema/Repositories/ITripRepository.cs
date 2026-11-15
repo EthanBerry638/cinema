@@ -1,8 +1,8 @@
-﻿using cinema.Models;
+﻿using cinema.DTOs;
 
 namespace cinema.Repositories;
 
 public interface ITripRepository
 {
-    Task<List<Trip>> MyTrips(Guid userId);
+    Task<List<TripSummary>> MyTrips(Guid userId);
 }
