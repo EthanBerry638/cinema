@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+  </Folder>
+  <Project Path="cinema.tests/cinema.tests.csproj" />
+  <Project Path="cinema/cinema.csproj" />
+</Solution>

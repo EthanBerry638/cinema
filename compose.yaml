@@ -1,0 +1,40 @@
+services:
+  cinema:
+    image: cinema
+    build:
+      context: .
+      dockerfile: cinema/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_HTTP_PORTS: "8080"
+      ASPNETCORE_HTTPS_PORTS: "8081"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /https/cinema.pem
+      ASPNETCORE_Kestrel__Certificates__Default__KeyPath: /https/cinema.key
+      ConnectionStrings__Cinema: "Host=db;Port=5432;Database=${POSTGRES_DB:-cinema};Username=${POSTGRES_USER:-cinema};Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+    volumes:
+      - ./.certs:/https:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cinema}
+      POSTGRES_USER: ${POSTGRES_USER:-cinema}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - cinema-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cinema-db:

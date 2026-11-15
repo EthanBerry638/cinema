@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+.git/
+.github/
+.idea/
+.vs/
+.vscode/
+.env
+.env.*
+*.md
+compose.yaml
+**/Dockerfile
+.certs/

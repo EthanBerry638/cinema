@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  POSTGRES_DB: cinema
+  POSTGRES_USER: cinema
+  POSTGRES_PASSWORD: ci-only-password
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17
+        env:
+          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: ${{ env.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cinema -d cinema"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Check for missing migrations
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.*
+          dotnet ef migrations has-pending-model-changes --project cinema
+
+      - name: Apply migrations to CI database
+        env:
+          ConnectionStrings__Cinema: "Host=localhost;Port=5432;Database=${{ env.POSTGRES_DB }};Username=${{ env.POSTGRES_USER }};Password=${{ env.POSTGRES_PASSWORD }}"
+        run: dotnet ef database update --project cinema
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --ignore-exit-code 8
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build Docker image
+        run: docker build --file cinema/Dockerfile --tag cinema:ci .
