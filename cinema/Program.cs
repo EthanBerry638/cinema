@@ -1,4 +1,5 @@
 using cinema.Data;
+using cinema.Models;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -9,7 +10,16 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Cinema")));
 
+builder.Services.AddIdentityApiEndpoints<User>()
+    .AddEntityFrameworkStores<CinemaDbContext>();
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -20,6 +30,6 @@ if (app.Environment.IsDevelopment())
     await scope.ServiceProvider.GetRequiredService<CinemaDbContext>().Database.MigrateAsync();
 }
 
-app.UseHttpsRedirection();
+app.MapGroup("/api/auth").MapIdentityApi<User>();
 
 app.Run();
