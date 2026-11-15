@@ -13,6 +13,14 @@ public sealed class PostgresFixture : IAsyncLifetime
         .Build();
 
     private string ConnectionString => _container.GetConnectionString();
+    
+    public CinemaDbContext CreateDbContext()
+    {
+        var options = new DbContextOptionsBuilder<CinemaDbContext>()
+            .UseNpgsql(ConnectionString)
+            .Options;
+        return new CinemaDbContext(options);
+    }
 
     public async ValueTask InitializeAsync()
     {
