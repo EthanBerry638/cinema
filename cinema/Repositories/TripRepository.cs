@@ -1,5 +1,6 @@
 ﻿using cinema.Data;
 using cinema.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace cinema.Repositories;
 
@@ -9,6 +10,6 @@ public class TripRepository (CinemaDbContext db) : ITripRepository
     
     public async Task<List<Trip>> MyTrips(Guid userId)
     {
-        return null;
+        return await _db.Trips.Where(t => t.UserId == userId).ToListAsync();
     }
 }
