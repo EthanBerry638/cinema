@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using cinema.Models;
+using cinema.DTOs;
 using cinema.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,7 +12,7 @@ namespace cinema.Controllers;
 public class TripController (TripService _tripService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Trip>>> MyTrips()
+    public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips()
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
