@@ -12,7 +12,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         .WithPassword("test")
         .Build();
 
-    private string ConnectionString => _container.GetConnectionString();
+    private string ConnectionString => $"{_container.GetConnectionString()};Include Error Detail=true";
     
     public CinemaDbContext CreateDbContext()
     {
@@ -25,11 +25,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         await _container.StartAsync();
-
-        var options = new DbContextOptionsBuilder<CinemaDbContext>()
-            .UseNpgsql(ConnectionString)
-            .Options;
-        await using var db = new CinemaDbContext(options);
+        await using var db = CreateDbContext();
         await db.Database.MigrateAsync();
     }
 
