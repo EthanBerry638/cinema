@@ -1,5 +1,8 @@
+using cinema.Controllers;
 using cinema.Data;
 using cinema.Models;
+using cinema.Repositories;
+using cinema.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -15,11 +18,18 @@ builder.Services.AddIdentityApiEndpoints<User>()
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddControllers();
+
+builder.Services.AddScoped<TripService>();
+builder.Services.AddScoped<ITripRepository, TripRepository>();
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {

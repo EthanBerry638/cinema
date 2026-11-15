@@ -23,4 +23,8 @@
       <ProjectReference Include="..\cinema\cinema.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Unit Tests\Service Tests\" />
+    </ItemGroup>
+
 </Project>
