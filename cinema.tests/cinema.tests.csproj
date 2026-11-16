@@ -23,8 +23,4 @@
       <ProjectReference Include="..\cinema\cinema.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Integration Tests\" />
-    </ItemGroup>
-
 </Project>
