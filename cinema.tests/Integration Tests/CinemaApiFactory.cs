@@ -54,7 +54,10 @@ public sealed class TestAuthHandler(
             return Task.FromResult(AuthenticateResult.NoResult());
 
         var identity = new ClaimsIdentity(
-            [new Claim(ClaimTypes.NameIdentifier, userId.ToString())],
+            [
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Name, $"user-{userId}")
+            ],
             SchemeName);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName);
 
