@@ -98,6 +98,19 @@ public class TripControllerTests : IAsyncDisposable
         var limited = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
     }
+    
+    [Fact]
+    public async Task MyTrips_RateLimit_ShouldBePerUser()
+    {
+        using var greedy = CreateClientFor(Guid.NewGuid());
+        using var other = CreateClientFor(Guid.NewGuid());
+
+        for (var i = 0; i < 61; i++)
+            await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+
+        var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
+    }
 
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
 
