@@ -25,11 +25,6 @@
 
     <ItemGroup>
       <Folder Include="Integration Tests\" />
-      <Folder Include="Unit Tests\Service Tests\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="Unit Tests\Service Tests\TripServiceTests.cs" />
     </ItemGroup>
 
 </Project>
