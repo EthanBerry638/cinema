@@ -83,6 +83,21 @@ public class TripControllerTests : IAsyncDisposable
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+    
+    [Fact]
+    public async Task MyTrips_ShouldReturn429_WhenRateLimitExceeded()
+    {
+        using var client = CreateClientFor(Guid.NewGuid());
+
+        for (var i = 0; i < 60; i++)
+        {
+            var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+            Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
+        }
+
+        var limited = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+    }
 
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
 
