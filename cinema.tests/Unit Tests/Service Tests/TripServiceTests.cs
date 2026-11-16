@@ -2,6 +2,7 @@
 using cinema.Models;
 using cinema.Repositories;
 using cinema.Services;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace cinema.tests.Unit_Tests.Service_Tests;
@@ -13,7 +14,8 @@ public class TripServiceTests
 
     public TripServiceTests()
     {
-        _tripService = new TripService(_mockRepo.Object);
+        var options = Options.Create(new TmdbOptions { PosterBaseUrl = PosterBaseUrl });
+        _tripService = new TripService(_mockRepo.Object, options);
     }
     
     private const string PosterBaseUrl = "https://image.tmdb.org/t/p/w500";

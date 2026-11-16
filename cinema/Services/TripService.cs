@@ -1,13 +1,13 @@
 ﻿using cinema.DTOs;
 using cinema.Repositories;
+using Microsoft.Extensions.Options;
 
 namespace cinema.Services;
 
-public class TripService (ITripRepository tripRepository)
+public class TripService (ITripRepository tripRepository, IOptions<TmdbOptions> tmdbOptions)
 {
     private readonly ITripRepository _tripRepository = tripRepository;
-    
-    private const string PosterBaseUrl = "https://image.tmdb.org/t/p/w500";
+    private readonly string _posterBaseUrl = tmdbOptions.Value.PosterBaseUrl;
     
     public async Task<List<TripSummaryResponse>> MyTrips(Guid userId)
     {
@@ -21,5 +21,5 @@ public class TripService (ITripRepository tripRepository)
     private string? BuildPosterUrl(string? posterPath) =>
         string.IsNullOrWhiteSpace(posterPath)
             ? null
-            : $"{PosterBaseUrl}/{posterPath.TrimStart('/')}";
+            : $"{_posterBaseUrl}/{posterPath.TrimStart('/')}";
 }

@@ -1,4 +1,4 @@
-using cinema.Controllers;
+using cinema;
 using cinema.Data;
 using cinema.Models;
 using cinema.Repositories;
@@ -9,6 +9,8 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+
+builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection(TmdbOptions.SectionName));
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Cinema")));
