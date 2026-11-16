@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using cinema;
 using cinema.Data;
 using cinema.Models;
@@ -25,11 +26,30 @@ builder.Services.AddControllers();
 builder.Services.AddScoped<TripService>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("trips", context =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: context.User.Identity?.Name
+                          ?? context.Connection.RemoteIpAddress?.ToString()
+                          ?? "anon", 
+            _ => new SlidingWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                SegmentsPerWindow = 6,   
+                QueueLimit = 0           
+            }));
+});
+
 var app = builder.Build();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
