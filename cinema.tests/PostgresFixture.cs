@@ -12,7 +12,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         .WithPassword("test")
         .Build();
 
-    private string ConnectionString => $"{_container.GetConnectionString()};Include Error Detail=true";
+    public string ConnectionString => $"{_container.GetConnectionString()};Include Error Detail=true";
     
     public CinemaDbContext CreateDbContext()
     {
