@@ -57,7 +57,7 @@ public class TripControllerTests : IAsyncDisposable
     }
 
     [Fact]
-    public async Task MyTrips_ShouldReturn404_WhenUserHasNoTrips()
+    public async Task MyTrips_ShouldReturn200WithEmptyList_WhenUserHasNoTrips()
     {
         var userId = Guid.NewGuid();
         var otherUserId = Guid.NewGuid();
@@ -72,7 +72,11 @@ public class TripControllerTests : IAsyncDisposable
 
         var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        Assert.Empty(
+            (await response.Content.ReadFromJsonAsync<List<TripSummaryResponse>>(TestContext.Current.CancellationToken))
+            !);
     }
 
     [Fact]

@@ -21,8 +21,6 @@ public class TripController (TripService tripService) : ControllerBase
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         var trips = await _tripService.MyTrips(userId);
-
-        if (trips.Count == 0) return NotFound();
         
         return Ok(trips);
     }
