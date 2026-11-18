@@ -8,7 +8,7 @@ public class TripRepository (CinemaDbContext db) : ITripRepository
 {
     private readonly CinemaDbContext _db = db;
     
-    public async Task<List<TripSummary>> MyTrips(Guid userId, CancellationToken ct = default)
+    public async Task<List<TripSummary>> MyTrips(Guid userId, CancellationToken ct)
     {
         return await _db.Trips
             .Where(t => t.UserId == userId)
