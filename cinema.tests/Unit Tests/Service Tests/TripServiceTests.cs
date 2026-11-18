@@ -36,7 +36,7 @@ public class TripServiceTests
             new(secondTripId, secondMovieId, "Oppenheimer", "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
                 watchedAt.AddDays(-14), "BFI IMAX", Format.Imax, 22.00m, null)
         };
-        _mockRepo.Setup(m => m.MyTrips(userId)).ReturnsAsync(tripSummaries);
+        _mockRepo.Setup(m => m.MyTrips(userId, It.IsAny<CancellationToken>())).ReturnsAsync(tripSummaries);
         var expected = new List<TripSummaryResponse>
         {
             new(firstTripId, firstMovieId, "Dune: Part Two",
@@ -61,7 +61,7 @@ public class TripServiceTests
             new DateTime(2026, 10, 5, 20, 0, 0, DateTimeKind.Utc), "Prince Charles Cinema",
             Format.Dolby, null, null);
 
-        _mockRepo.Setup(m => m.MyTrips(userId)).ReturnsAsync([trip]);
+        _mockRepo.Setup(m => m.MyTrips(userId, It.IsAny<CancellationToken>())).ReturnsAsync([trip]);
 
         var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
 
@@ -74,7 +74,7 @@ public class TripServiceTests
     public async Task MyTrips_ShouldReturnEmpty_WhenUserHasNoTrips()
     {
         var userId = Guid.NewGuid();
-        _mockRepo.Setup(m => m.MyTrips(userId)).ReturnsAsync([]);
+        _mockRepo.Setup(m => m.MyTrips(userId, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
         var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
 
