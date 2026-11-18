@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using cinema;
@@ -34,15 +35,15 @@ builder.Services.AddRateLimiter(options =>
 
     options.AddPolicy("trips", context =>
         RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.User.Identity?.Name
+            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
                           ?? context.Connection.RemoteIpAddress?.ToString()
-                          ?? "anon", 
+                          ?? "anon",
             _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 60,
                 Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,   
-                QueueLimit = 0           
+                SegmentsPerWindow = 6,
+                QueueLimit = 0
             }));
 });
 
