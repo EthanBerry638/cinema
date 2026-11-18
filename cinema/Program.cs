@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using cinema;
 using cinema.Data;
@@ -21,7 +22,8 @@ builder.Services.AddIdentityApiEndpoints<User>()
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddScoped<TripService>();
 builder.Services.AddScoped<ITripRepository, TripRepository>();
