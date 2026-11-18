@@ -47,10 +47,10 @@ public class TripServiceTests
                 watchedAt.AddDays(-14), "BFI IMAX", Format.Imax, 22.00m, null)
         };
         
-        var result = await _tripService.MyTrips(userId);
+        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
         
         Assert.Equal(expected, result);
-        _mockRepo.Verify(m => m.MyTrips(userId), Times.Once);
+        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -63,10 +63,11 @@ public class TripServiceTests
 
         _mockRepo.Setup(m => m.MyTrips(userId)).ReturnsAsync([trip]);
 
-        var result = await _tripService.MyTrips(userId);
+        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
 
         var single = Assert.Single(result);
         Assert.Null(single.PosterUrl);
+        _mockRepo.Verify(m => m.MyTrips(userId,It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -75,8 +76,9 @@ public class TripServiceTests
         var userId = Guid.NewGuid();
         _mockRepo.Setup(m => m.MyTrips(userId)).ReturnsAsync([]);
 
-        var result = await _tripService.MyTrips(userId);
+        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
 
         Assert.Empty(result);
+        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
