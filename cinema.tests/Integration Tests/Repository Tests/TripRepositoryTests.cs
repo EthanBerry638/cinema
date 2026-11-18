@@ -107,13 +107,13 @@ public class TripRepositoryTests(PostgresFixture fixture)
     }
     
     [Fact]
-    public async Task MyTrips_ShouldThrowOpertationCanceled_WhenCancellationTokenIsCancelled()
+    public async Task MyTrips_ShouldThrowOperationCanceled_WhenCancellationTokenIsCancelled()
     {
         var ct = new CancellationToken(canceled: true);
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            async () => await repository.MyTrips(Guid.NewGuid(), ct));
+            () => repository.MyTrips(Guid.NewGuid(), ct));
     }
 }
