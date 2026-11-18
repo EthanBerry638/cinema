@@ -18,7 +18,8 @@ public class TripController (TripService tripService) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
+            return Unauthorized();
 
         var trips = await _tripService.MyTrips(userId);
         
