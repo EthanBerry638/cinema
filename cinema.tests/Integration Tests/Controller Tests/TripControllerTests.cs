@@ -120,7 +120,7 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldReturn401_WhenUserDoesNotHaveAnId()
     {
-        var client = _factory.CreateClient();
+        using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, "not a guid");
         
         var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
