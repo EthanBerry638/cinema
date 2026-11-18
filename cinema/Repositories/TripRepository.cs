@@ -27,6 +27,6 @@ public class TripRepository (CinemaDbContext db) : ITripRepository
                 tm.t.Format,
                 tm.t.PricePaid,
                 tm.t.Notes))
-            .ToListAsync();
+            .ToListAsync(cancellationToken: ct);
     }
 }
