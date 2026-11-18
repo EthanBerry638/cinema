@@ -16,12 +16,12 @@ public class TripController (TripService tripService) : ControllerBase
     
     [EnableRateLimiting("trips")]
     [HttpGet]
-    public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips()
+    public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips(CancellationToken ct = default)
     {
         if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
             return Unauthorized();
 
-        var trips = await _tripService.MyTrips(userId);
+        var trips = await _tripService.MyTrips(userId, ct);
         
         return Ok(trips);
     }

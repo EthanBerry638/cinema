@@ -9,9 +9,9 @@ public class TripService (ITripRepository tripRepository, IOptions<TmdbOptions> 
     private readonly ITripRepository _tripRepository = tripRepository;
     private readonly string _posterBaseUrl = tmdbOptions.Value.PosterBaseUrl;
     
-    public async Task<List<TripSummaryResponse>> MyTrips(Guid userId)
+    public async Task<List<TripSummaryResponse>> MyTrips(Guid userId, CancellationToken ct = default)
     {
-        var trips = await _tripRepository.MyTrips(userId);
+        var trips = await _tripRepository.MyTrips(userId, ct);
 
         return trips.Select(t => new TripSummaryResponse(
             t.Id, t.MovieId, t.Title, BuildPosterUrl(t.PosterPath), t.WatchedAt, t.CinemaName,
