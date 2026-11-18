@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using cinema.DTOs;
 using cinema.Models;
@@ -110,6 +111,23 @@ public class TripControllerTests : IAsyncDisposable
 
         var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task MyTrips_ShouldConvertFormat_ToString()
+    {
+        var userId = Guid.NewGuid();
+        using var client = CreateClientFor(userId);
+        var movie = NewMovie("Movie");
+        var trip = NewTrip(userId, movie.Id, Format.Dolby, DateTime.UtcNow.AddDays(-7));
+        await SeedAsync([userId], [movie], [trip]);
+        
+        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        var json  = JsonNode.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var node = json![0]!["format"];
+        
+        Assert.Equal(JsonValueKind.String, node!.GetValueKind());
+        Assert.Equal("Dolby", node.GetValue<string>());
     }
 
     public ValueTask DisposeAsync() => _factory.DisposeAsync();
