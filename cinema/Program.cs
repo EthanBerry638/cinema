@@ -34,17 +34,22 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
     options.AddPolicy("trips", context =>
-        RateLimitPartition.GetSlidingWindowLimiter(
-            partitionKey: context.User.FindFirstValue(ClaimTypes.NameIdentifier)
-                          ?? context.Connection.RemoteIpAddress?.ToString()
-                          ?? "anon",
+    {
+        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId is null)
+            return RateLimitPartition.GetNoLimiter("anonymous");
+
+        return RateLimitPartition.GetSlidingWindowLimiter(
+            partitionKey: userId,
             _ => new SlidingWindowRateLimiterOptions
             {
                 PermitLimit = 60,
                 Window = TimeSpan.FromMinutes(1),
                 SegmentsPerWindow = 6,
                 QueueLimit = 0
-            }));
+            });
+    });
 });
 
 var app = builder.Build();
