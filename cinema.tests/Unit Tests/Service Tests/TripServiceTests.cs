@@ -67,7 +67,7 @@ public class TripServiceTests
 
         var single = Assert.Single(result);
         Assert.Null(single.PosterUrl);
-        _mockRepo.Verify(m => m.MyTrips(userId,It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
