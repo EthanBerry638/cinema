@@ -14,7 +14,7 @@ namespace cinema.tests.Integration_Tests.Controller_Tests;
 
 public class TripControllerTests : IAsyncDisposable
 {
-    private const string MyTripsUrl = "/api/trip";
+    private const string MyTripsUrl = "/api/me/trips";
     private const int TestRateLimit = 3;
     
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)

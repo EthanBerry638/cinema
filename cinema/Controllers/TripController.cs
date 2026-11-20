@@ -8,14 +8,14 @@ using Microsoft.AspNetCore.RateLimiting;
 namespace cinema.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/trips")]
 [Authorize]
 public class TripController (TripService tripService) : ControllerBase
 {
     private readonly TripService _tripService = tripService;
     
     [EnableRateLimiting("trips")]
-    [HttpGet]
+    [HttpGet("/api/me/trips")]
     public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips(CancellationToken ct = default)
     {
         if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
