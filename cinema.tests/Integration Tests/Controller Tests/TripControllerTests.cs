@@ -5,12 +5,15 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using cinema.DTOs;
 using cinema.Models;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace cinema.tests.Integration_Tests.Controller_Tests;
 
 public class TripControllerTests : IAsyncDisposable
 {
     private const string MyTripsUrl = "/api/trip";
+    private const int TestRateLimit = 3;
     
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -88,9 +91,10 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldReturn429_WhenRateLimitExceeded()
     {
+        await ConfigureTestRateLimit();
         using var client = CreateClientFor(Guid.NewGuid());
 
-        for (var i = 0; i < 60; i++)
+        for (var i = 0; i < TestRateLimit; i++)
         {
             var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
             Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
@@ -103,10 +107,11 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_RateLimit_ShouldBePerUser()
     {
+        await ConfigureTestRateLimit();
         using var greedy = CreateClientFor(Guid.NewGuid());
         using var other = CreateClientFor(Guid.NewGuid());
 
-        for (var i = 0; i < 61; i++)
+        for (var i = 0; i < TestRateLimit; i++)
             await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
         var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
@@ -149,5 +154,13 @@ public class TripControllerTests : IAsyncDisposable
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
         return client;
+    }
+
+    private async Task ConfigureTestRateLimit()
+    {
+        await using var baseFactory = new CinemaApiFactory(_fixture);
+        await using var factory = baseFactory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s =>
+                s.Configure<TripRateLimitOptions>(o => o.PermitLimit = TestRateLimit)));
     }
 }
