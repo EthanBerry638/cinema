@@ -19,7 +19,7 @@ public class TripController (TripService tripService) : ControllerBase
     public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips(CancellationToken ct = default)
     {
         if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))
-            return Unauthorized();
+            return Challenge();
 
         var trips = await _tripService.MyTrips(userId, ct);
         
