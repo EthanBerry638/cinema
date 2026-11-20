@@ -2,6 +2,7 @@
 using cinema.Models;
 using cinema.Repositories;
 using cinema.Services;
+using cinema.Settings;
 using Microsoft.Extensions.Options;
 using Moq;
 

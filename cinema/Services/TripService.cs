@@ -1,5 +1,6 @@
 ﻿using cinema.DTOs;
 using cinema.Repositories;
+using cinema.Settings;
 using Microsoft.Extensions.Options;
 
 namespace cinema.Services;

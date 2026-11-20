@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace cinema;
+namespace cinema.Settings;
 
 public class TmdbOptions
 {
