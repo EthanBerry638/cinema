@@ -23,6 +23,8 @@ public class TripServiceTests
     [Fact]
     public async Task MyTrips_ShouldReturnTripsWithFullPosterUrl_WhenUserHasTrips()
     {
+        using var cts = new CancellationTokenSource();
+        var ct = cts.Token;
         var userId = Guid.NewGuid();
         var watchedAt = new DateTime(2026, 11, 1, 19, 30, 0, DateTimeKind.Utc);
         var firstTripId = Guid.NewGuid();
@@ -47,38 +49,41 @@ public class TripServiceTests
                 watchedAt.AddDays(-14), "BFI IMAX", Format.Imax, 22.00m, null)
         };
         
-        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
+        var result = await _tripService.MyTrips(userId, ct);
         
         Assert.Equal(expected, result);
-        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(m => m.MyTrips(userId, ct), Times.Once);
     }
 
     [Fact]
     public async Task MyTrips_ShouldReturnNullPosterUrl_WhenPosterPathIsNull()
     {
+        using var cts = new CancellationTokenSource();
+        var ct = cts.Token;
         var userId = Guid.NewGuid();
         var trip = new TripSummary(Guid.NewGuid(), Guid.NewGuid(), "Obscure Indie Film", null,
             new DateTime(2026, 10, 5, 20, 0, 0, DateTimeKind.Utc), "Prince Charles Cinema",
             Format.Dolby, null, null);
-
         _mockRepo.Setup(m => m.MyTrips(userId, It.IsAny<CancellationToken>())).ReturnsAsync([trip]);
 
-        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
+        var result = await _tripService.MyTrips(userId, ct);
 
         var single = Assert.Single(result);
         Assert.Null(single.PosterUrl);
-        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(m => m.MyTrips(userId, ct), Times.Once);
     }
 
     [Fact]
     public async Task MyTrips_ShouldReturnEmpty_WhenUserHasNoTrips()
     {
+        using var cts = new CancellationTokenSource();
+        var ct = cts.Token;
         var userId = Guid.NewGuid();
         _mockRepo.Setup(m => m.MyTrips(userId, It.IsAny<CancellationToken>())).ReturnsAsync([]);
 
-        var result = await _tripService.MyTrips(userId, It.IsAny<CancellationToken>());
+        var result = await _tripService.MyTrips(userId, ct);
 
         Assert.Empty(result);
-        _mockRepo.Verify(m => m.MyTrips(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _mockRepo.Verify(m => m.MyTrips(userId, ct), Times.Once);
     }
 }
