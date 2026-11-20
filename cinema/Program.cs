@@ -50,6 +50,7 @@ builder.Services.AddRateLimiter(options =>
             GetRequiredService<IOptions<TripRateLimitOptions>>().Value;
 
         if (userId is null)
+            // Anonymous users are not rate limited yet: https://github.com/EthanBerry638/cinema/issues/2
             return RateLimitPartition.GetNoLimiter("anonymous");
 
         return RateLimitPartition.GetSlidingWindowLimiter(
