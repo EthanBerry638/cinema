@@ -13,7 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-builder.Services.Configure<TmdbOptions>(builder.Configuration.GetSection(TmdbOptions.SectionName));
+builder.Services.AddOptions<TmdbOptions>()
+    .BindConfiguration(TmdbOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddDbContext<CinemaDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Cinema")));
