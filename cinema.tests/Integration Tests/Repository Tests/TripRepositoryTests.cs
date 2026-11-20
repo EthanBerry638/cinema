@@ -78,4 +78,31 @@ public class TripRepositoryTests(PostgresFixture fixture)
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => repository.MyTrips(Guid.NewGuid(), ct));
     }
+
+    [Fact]
+    public async Task MyTrips_ShouldOrderByCreatedAtDescending_WhenWatchedAtIsEqual()
+    {
+        var watchedAt = DateTime.UtcNow.AddDays(-1);
+        var user = TestData.NewUser();
+        var movie = TestData.NewMovie("Test Movie");
+        var yesterdaysTrip1 = TestData.NewTrip(user.Id, movie.Id, watchedAt,
+            createdAt: DateTime.UtcNow);
+        var yesterdaysTrip2 = TestData.NewTrip(user.Id, movie.Id, watchedAt,
+            createdAt: DateTime.UtcNow.AddDays(-1));
+        var yesterdaysTrip3 = TestData.NewTrip(user.Id, movie.Id, watchedAt,
+            createdAt: DateTime.UtcNow.AddDays(-3));
+        await _fixture.SeedAsync(
+            users: [user],
+            movies: [movie]);
+        await _fixture.SeedAsync(trips: [yesterdaysTrip1]);
+        await _fixture.SeedAsync(trips: [yesterdaysTrip2]);
+        await _fixture.SeedAsync(trips: [yesterdaysTrip3]);
+        
+        await using var db = _fixture.CreateDbContext();
+        var repository = new TripRepository(db);
+        
+        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
+        
+        Assert.Equal([yesterdaysTrip1.Id, yesterdaysTrip2.Id, yesterdaysTrip3.Id], result.Select(t => t.Id));
+    }
 }
