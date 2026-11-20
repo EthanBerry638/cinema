@@ -45,8 +45,8 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy(TripRateLimitSettings.PolicyName, context =>
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var rateLimitSettings = context.RequestServices.
-            GetRequiredService<IOptions<TripRateLimitSettings>>().Value;
+        var rateLimitSettings = context.RequestServices
+            .GetRequiredService<IOptions<TripRateLimitSettings>>().Value;
 
         if (userId is null)
             // Anonymous users are not rate limited yet: https://github.com/EthanBerry638/cinema/issues/2

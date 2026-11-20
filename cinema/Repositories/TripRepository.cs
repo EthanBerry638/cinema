@@ -16,8 +16,8 @@ public class TripRepository (CinemaDbContext db) : ITripRepository
                 t => t.MovieId,
                 m => m.Id,
                 (t, m) => new { t, m })
-            .OrderByDescending(x => x.t.WatchedAt)
-            .ThenByDescending(y => y.t.CreatedAt)
+            .OrderByDescending(tm => tm.t.WatchedAt)
+            .ThenByDescending(tm => tm.t.CreatedAt)
             .Select(tm => new TripSummary(
                 tm.t.Id,
                 tm.t.MovieId,
