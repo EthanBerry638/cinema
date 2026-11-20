@@ -6,7 +6,9 @@ using cinema.Data;
 using cinema.Models;
 using cinema.Repositories;
 using cinema.Services;
+using cinema.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,11 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddOptions<TmdbOptions>()
     .BindConfiguration(TmdbOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<TripRateLimitOptions>()
+    .BindConfiguration(TripRateLimitOptions.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
@@ -39,6 +46,8 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("trips", context =>
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var rateLimitOptions = context.RequestServices.
+            GetRequiredService<IOptions<TripRateLimitOptions>>().Value;
 
         if (userId is null)
             return RateLimitPartition.GetNoLimiter("anonymous");
@@ -47,9 +56,9 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: userId,
             _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = 60,
-                Window = TimeSpan.FromMinutes(1),
-                SegmentsPerWindow = 6,
+                PermitLimit = rateLimitOptions.PermitLimit,
+                Window = rateLimitOptions.Window,
+                SegmentsPerWindow = rateLimitOptions.SegmentsPerWindow,
                 QueueLimit = 0
             });
     });
