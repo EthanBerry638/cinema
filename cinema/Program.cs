@@ -46,7 +46,7 @@ builder.Services.AddRateLimiter(options =>
     options.AddPolicy("trips", context =>
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var rateLimitOptions = context.RequestServices.
+        var rateLimitSettings = context.RequestServices.
             GetRequiredService<IOptions<TripRateLimitSettings>>().Value;
 
         if (userId is null)
@@ -57,9 +57,9 @@ builder.Services.AddRateLimiter(options =>
             partitionKey: userId,
             _ => new SlidingWindowRateLimiterOptions
             {
-                PermitLimit = rateLimitOptions.PermitLimit,
-                Window = rateLimitOptions.Window,
-                SegmentsPerWindow = rateLimitOptions.SegmentsPerWindow,
+                PermitLimit = rateLimitSettings.PermitLimit,
+                Window = rateLimitSettings.Window,
+                SegmentsPerWindow = rateLimitSettings.SegmentsPerWindow,
                 QueueLimit = 0
             });
     });
