@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using cinema.DTOs;
 using cinema.Services;
+using cinema.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -14,7 +15,7 @@ public class TripController (TripService tripService) : ControllerBase
 {
     private readonly TripService _tripService = tripService;
     
-    [EnableRateLimiting("trips")]
+    [EnableRateLimiting(TripRateLimitSettings.PolicyName)]
     [HttpGet("/api/me/trips")]
     public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips(CancellationToken ct = default)
     {

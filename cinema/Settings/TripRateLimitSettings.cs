@@ -14,4 +14,6 @@ public class TripRateLimitSettings
     
     [Range(1, int.MaxValue)]
     public int SegmentsPerWindow { get; set; }
+
+    public const string PolicyName = "trips";
 }

@@ -42,7 +42,7 @@ builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-    options.AddPolicy("trips", context =>
+    options.AddPolicy(TripRateLimitSettings.PolicyName, context =>
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var rateLimitSettings = context.RequestServices.
