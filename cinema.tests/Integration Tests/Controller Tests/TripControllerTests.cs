@@ -29,22 +29,19 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldReturn200WithTripsNewestFirst_WhenUserHasTrips()
     {
-        var userId = Guid.NewGuid();
-        var otherUserId = Guid.NewGuid();
-
-        var firstMovie = NewMovie("First Movie", "/first.jpg");
-        var secondMovie = NewMovie("Second Movie", "/second.jpg");
-
-        var olderTrip = NewTrip(userId, firstMovie.Id, Format.Dolby, DateTime.UtcNow.AddDays(-7));
-        var newerTrip = NewTrip(userId, secondMovie.Id, Format.FourDx, DateTime.UtcNow.AddDays(-1));
-        var someoneElsesTrip = NewTrip(otherUserId, firstMovie.Id, Format.Standard, DateTime.UtcNow);
-
-        await SeedAsync(
-            users: [userId, otherUserId],
+        var user = TestData.NewUser();
+        var otherUser = TestData.NewUser();
+        var firstMovie = TestData.NewMovie("First Movie", "/first.jpg");
+        var secondMovie = TestData.NewMovie("Second Movie", "/second.jpg");
+        var olderTrip = TestData.NewTrip(user.Id, firstMovie.Id, DateTime.UtcNow.AddDays(-7), Format.Dolby);
+        var newerTrip = TestData.NewTrip(user.Id, secondMovie.Id, DateTime.UtcNow.AddDays(-1), Format.FourDx);
+        var someoneElsesTrip = TestData.NewTrip(otherUser.Id, firstMovie.Id, DateTime.UtcNow);
+        await _fixture.SeedAsync(
+            users: [user, otherUser],
             movies: [firstMovie, secondMovie],
             trips: [olderTrip, newerTrip, someoneElsesTrip]);
 
-        using var client = CreateClientFor(userId);
+        using var client = CreateClientFor(user.Id);
 
         var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
@@ -59,16 +56,15 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldReturn200WithEmptyList_WhenUserHasNoTrips()
     {
-        var userId = Guid.NewGuid();
-        var otherUserId = Guid.NewGuid();
-        var movie = NewMovie("Test Movie Title");
-
-        await SeedAsync(
-            users: [userId, otherUserId],
+        var user = TestData.NewUser();
+        var otherUser = TestData.NewUser();
+        var movie = TestData.NewMovie("Test Movie Title");
+        await _fixture.SeedAsync(
+            users: [user, otherUser],
             movies: [movie],
-            trips: [NewTrip(otherUserId, movie.Id, Format.Standard, DateTime.UtcNow)]);
+            trips: [TestData.NewTrip(otherUser.Id, movie.Id, DateTime.UtcNow)]);
 
-        using var client = CreateClientFor(userId);
+        using var client = CreateClientFor(user.Id);
 
         var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
@@ -131,14 +127,15 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldConvertFormat_ToString()
     {
-        var userId = Guid.NewGuid();
-        using var client = CreateClientFor(userId);
-        var movie = NewMovie("Movie");
-        var trip = NewTrip(userId, movie.Id, Format.Dolby, DateTime.UtcNow.AddDays(-7));
-        await SeedAsync([userId], [movie], [trip]);
-        
+        var user = TestData.NewUser();
+        var movie = TestData.NewMovie("Movie");
+        var trip = TestData.NewTrip(user.Id, movie.Id, DateTime.UtcNow.AddDays(-7), Format.Dolby);
+        await _fixture.SeedAsync([user], [movie], [trip]);
+
+        using var client = CreateClientFor(user.Id);
+
         var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
-        var json  = JsonNode.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var json = JsonNode.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var node = json![0]!["format"];
         
         Assert.Equal(JsonValueKind.String, node!.GetValueKind());
@@ -153,29 +150,4 @@ public class TripControllerTests : IAsyncDisposable
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
         return client;
     }
-
-    private async Task SeedAsync(Guid[] users, Movie[] movies, Trip[] trips)
-    {
-        await using var db = _fixture.CreateDbContext();
-
-        db.Users.AddRange(users.Select(id => new User
-        {
-            Id = id, UserName = $"user-{id}", Email = $"{id}@test.com"
-        }));
-        db.Movies.AddRange(movies);
-        db.Trips.AddRange(trips);
-
-        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
-    }
-
-    private static Movie NewMovie(string title, string? posterPath = null) => new()
-    {
-        Id = Guid.NewGuid(), TmdbId = Random.Shared.Next(), Title = title, PosterPath = posterPath
-    };
-
-    private static Trip NewTrip(Guid userId, Guid movieId, Format format, DateTime watchedAt) => new()
-    {
-        Id = Guid.NewGuid(), UserId = userId, MovieId = movieId,
-        CinemaName = $"Cinema {Guid.NewGuid():N}", Format = format, WatchedAt = watchedAt
-    };
 }

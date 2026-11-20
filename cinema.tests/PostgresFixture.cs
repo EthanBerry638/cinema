@@ -1,4 +1,5 @@
 ﻿using cinema.Data;
+using cinema.Models;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 
@@ -30,4 +31,15 @@ public sealed class PostgresFixture : IAsyncLifetime
     }
 
     public ValueTask DisposeAsync() => _container.DisposeAsync();
+    
+    public async Task SeedAsync(User[]? users = null, Movie[]? movies = null, Trip[]? trips = null)
+    {
+        await using var db = CreateDbContext();
+
+        db.Users.AddRange(users ?? []);
+        db.Movies.AddRange(movies ?? []);
+        db.Trips.AddRange(trips ?? []);
+
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
 }

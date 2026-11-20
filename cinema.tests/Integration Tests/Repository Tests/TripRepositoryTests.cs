@@ -10,51 +10,25 @@ public class TripRepositoryTests(PostgresFixture fixture)
     [Fact]
     public async Task MyTrips_ShouldReturnTripsNewestFirst_WhenUserHasTrips()
     {
-        var userId = Guid.NewGuid();
-        var otherUserId = Guid.NewGuid();
-
-        var firstMovie = new Movie
-        {
-            Id = Guid.NewGuid(), TmdbId = Random.Shared.Next(), Title = "First Movie", PosterPath = "/first.jpg"
-        };
-        var secondMovie = new Movie
-        {
-            Id = Guid.NewGuid(), TmdbId = Random.Shared.Next(), Title = "Second Movie", PosterPath = "/second.jpg"
-        };
-
-        var olderTrip = new Trip
-        {
-            Id = Guid.NewGuid(), UserId = userId, MovieId = firstMovie.Id, CinemaName = "Test Name 1",
-            Format = Format.Dolby, WatchedAt = DateTime.UtcNow.AddDays(-7)
-        };
-        var newerTrip = new Trip
-        {
-            Id = Guid.NewGuid(), UserId = userId, MovieId = secondMovie.Id, CinemaName = "Test Name 2",
-            Format = Format.FourDx, WatchedAt = DateTime.UtcNow.AddDays(-1)
-        };
-        var someoneElsesTrip = new Trip
-        {
-            Id = Guid.NewGuid(), UserId = otherUserId, MovieId = firstMovie.Id, CinemaName = "Test Name 3",
-            Format = Format.Standard, WatchedAt = DateTime.UtcNow
-        };
-
-        await using (var seedDb = _fixture.CreateDbContext())
-        {
-            seedDb.Users.AddRange(
-                new User { Id = userId, UserName = $"user-{userId}", Email = $"{userId}@test.com" },
-                new User { Id = otherUserId, UserName = $"user-{otherUserId}", Email = $"{otherUserId}@test.com" });
-            seedDb.Movies.AddRange(firstMovie, secondMovie);
-            seedDb.Trips.AddRange(olderTrip, newerTrip, someoneElsesTrip);
-            await seedDb.SaveChangesAsync(TestContext.Current.CancellationToken);
-        }
+        var user = TestData.NewUser();
+        var otherUser = TestData.NewUser();
+        var firstMovie = TestData.NewMovie("First Movie", "/first.jpg");
+        var secondMovie = TestData.NewMovie("Second Movie", "/second.jpg");
+        var olderTrip = TestData.NewTrip(user.Id, firstMovie.Id, DateTime.UtcNow.AddDays(-7), Format.Dolby);
+        var newerTrip = TestData.NewTrip(user.Id, secondMovie.Id, DateTime.UtcNow.AddDays(-1), Format.FourDx);
+        var someoneElsesTrip = TestData.NewTrip(otherUser.Id, firstMovie.Id, DateTime.UtcNow);
+        await _fixture.SeedAsync(
+            users: [user, otherUser],
+            movies: [firstMovie, secondMovie],
+            trips: [olderTrip, newerTrip, someoneElsesTrip]);
 
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
 
-        var result = await repository.MyTrips(userId, TestContext.Current.CancellationToken);
-        
+        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
+
         Assert.Equal([newerTrip.Id, olderTrip.Id], result.Select(t => t.Id));
-        
+
         Assert.Collection(result,
             newest =>
             {
@@ -77,35 +51,23 @@ public class TripRepositoryTests(PostgresFixture fixture)
     [Fact]
     public async Task MyTrips_ShouldReturnNoTrips_WhenUserHasNoTrips()
     {
-        var userId = Guid.NewGuid();
-        var otherUserId = Guid.NewGuid();
-        var movieId = Guid.NewGuid();
-
-        var movie = new Movie { Id = movieId, TmdbId = Random.Shared.Next(), Title = "Test Movie Title" };
-        var someoneElsesTrip = new Trip
-        {
-            Id = Guid.NewGuid(), UserId = otherUserId, MovieId = movieId, CinemaName = "Test Name 3",
-            Format = Format.Standard, WatchedAt = DateTime.UtcNow
-        };
-
-        await using (var seedDb = _fixture.CreateDbContext())
-        {
-            seedDb.Users.AddRange(
-                new User { Id = userId, UserName = $"user-{userId}", Email = $"{userId}@test.com" },
-                new User { Id = otherUserId, UserName = $"user-{otherUserId}", Email = $"{otherUserId}@test.com" });
-            seedDb.Movies.Add(movie);
-            seedDb.Trips.Add(someoneElsesTrip);
-            await seedDb.SaveChangesAsync(TestContext.Current.CancellationToken);
-        }
+        var user = TestData.NewUser();
+        var otherUser = TestData.NewUser();
+        var movie = TestData.NewMovie("Test Movie Title");
+        var someoneElsesTrip = TestData.NewTrip(otherUser.Id, movie.Id, DateTime.UtcNow);
+        await _fixture.SeedAsync(
+            users: [user, otherUser],
+            movies: [movie],
+            trips: [someoneElsesTrip]);
 
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
 
-        var result = await repository.MyTrips(userId, TestContext.Current.CancellationToken);
+        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
     }
-    
+
     [Fact]
     public async Task MyTrips_ShouldThrowOperationCanceled_WhenCancellationTokenIsCancelled()
     {
