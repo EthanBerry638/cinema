@@ -1,7 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
-using cinema;
 using cinema.Data;
 using cinema.Models;
 using cinema.Repositories;
