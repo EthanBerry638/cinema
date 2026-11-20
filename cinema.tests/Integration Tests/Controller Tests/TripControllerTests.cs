@@ -5,6 +5,8 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using cinema.DTOs;
 using cinema.Models;
+using cinema.Settings;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,12 +23,16 @@ public class TripControllerTests : IAsyncDisposable
     };
 
     private readonly PostgresFixture _fixture;
-    private readonly CinemaApiFactory _factory;
+    private readonly CinemaApiFactory _baseFactory;
+    private readonly WebApplicationFactory<Program> _factory;
 
     public TripControllerTests(PostgresFixture fixture)
     {
         _fixture = fixture;
-        _factory = new CinemaApiFactory(fixture);
+        _baseFactory = new CinemaApiFactory(fixture);
+        _factory = _baseFactory.WithWebHostBuilder(b =>
+            b.ConfigureTestServices(s => s.Configure<TripRateLimitOptions>(o =>
+                o.PermitLimit = TestRateLimit)));
     }
 
     [Fact]
@@ -46,7 +52,7 @@ public class TripControllerTests : IAsyncDisposable
 
         using var client = CreateClientFor(user.Id);
 
-        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -69,7 +75,7 @@ public class TripControllerTests : IAsyncDisposable
 
         using var client = CreateClientFor(user.Id);
 
-        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
@@ -83,7 +89,7 @@ public class TripControllerTests : IAsyncDisposable
     {
         using var client = _factory.CreateClient();
 
-        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -91,30 +97,30 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldReturn429_WhenRateLimitExceeded()
     {
-        await ConfigureTestRateLimit();
         using var client = CreateClientFor(Guid.NewGuid());
 
         for (var i = 0; i < TestRateLimit; i++)
         {
-            var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+            using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
             Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
         }
 
-        var limited = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var limited = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
     }
     
     [Fact]
     public async Task MyTrips_RateLimit_ShouldBePerUser()
     {
-        await ConfigureTestRateLimit();
         using var greedy = CreateClientFor(Guid.NewGuid());
         using var other = CreateClientFor(Guid.NewGuid());
 
         for (var i = 0; i < TestRateLimit; i++)
             await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
-
-        var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        
+        using var greedyLimited = await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.TooManyRequests, greedyLimited.StatusCode);
+        using var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
     }
 
@@ -124,7 +130,7 @@ public class TripControllerTests : IAsyncDisposable
         using var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, "not a guid");
         
-        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -139,7 +145,7 @@ public class TripControllerTests : IAsyncDisposable
 
         using var client = CreateClientFor(user.Id);
 
-        var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         var json = JsonNode.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var node = json![0]!["format"];
         
@@ -147,20 +153,12 @@ public class TripControllerTests : IAsyncDisposable
         Assert.Equal("Dolby", node.GetValue<string>());
     }
 
-    public ValueTask DisposeAsync() => _factory.DisposeAsync();
+    public ValueTask DisposeAsync() => _baseFactory.DisposeAsync();
 
     private HttpClient CreateClientFor(Guid userId)
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
         return client;
-    }
-
-    private async Task ConfigureTestRateLimit()
-    {
-        await using var baseFactory = new CinemaApiFactory(_fixture);
-        await using var factory = baseFactory.WithWebHostBuilder(b =>
-            b.ConfigureTestServices(s =>
-                s.Configure<TripRateLimitOptions>(o => o.PermitLimit = TestRateLimit)));
     }
 }
