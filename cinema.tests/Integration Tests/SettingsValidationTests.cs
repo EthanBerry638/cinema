@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace cinema.tests.Integration_Tests;
 
-public class OptionsValidationTests(PostgresFixture fixture)
+public class SettingsValidationTests(PostgresFixture fixture)
 {
     private readonly PostgresFixture _fixture = fixture;
     
@@ -18,7 +18,7 @@ public class OptionsValidationTests(PostgresFixture fixture)
         using var baseFactory = new CinemaApiFactory(_fixture);
         using var factory = baseFactory.WithWebHostBuilder(b =>
             b.ConfigureTestServices(s =>
-                s.Configure<TmdbOptions>(o => o.PosterBaseUrl = url!)));
+                s.Configure<TmdbSettings>(o => o.PosterBaseUrl = url!)));
 
         Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
     }

@@ -2,7 +2,7 @@
 
 namespace cinema.Settings;
 
-public class TmdbOptions
+public class TmdbSettings
 {
     public const string SectionName = "Tmdb";
     

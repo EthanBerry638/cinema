@@ -15,7 +15,7 @@ public class TripServiceTests
 
     public TripServiceTests()
     {
-        var options = Options.Create(new TmdbOptions { PosterBaseUrl = PosterBaseUrl });
+        var options = Options.Create(new TmdbSettings { PosterBaseUrl = PosterBaseUrl });
         _tripService = new TripService(_mockRepo.Object, options);
     }
     

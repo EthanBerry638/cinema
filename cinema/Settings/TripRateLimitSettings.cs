@@ -2,7 +2,7 @@
 
 namespace cinema.Settings;
 
-public class TripRateLimitOptions
+public class TripRateLimitSettings
 {
     public const string SectionName = "TripRateLimit";
     

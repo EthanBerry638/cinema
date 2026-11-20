@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace cinema.Services;
 
-public class TripService (ITripRepository tripRepository, IOptions<TmdbOptions> tmdbOptions)
+public class TripService (ITripRepository tripRepository, IOptions<TmdbSettings> tmdbOptions)
 {
     private readonly ITripRepository _tripRepository = tripRepository;
     private readonly string _posterBaseUrl = tmdbOptions.Value.PosterBaseUrl;

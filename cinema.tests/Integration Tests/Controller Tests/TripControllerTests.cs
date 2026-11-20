@@ -31,7 +31,7 @@ public class TripControllerTests : IAsyncDisposable
         _fixture = fixture;
         _baseFactory = new CinemaApiFactory(fixture);
         _factory = _baseFactory.WithWebHostBuilder(b =>
-            b.ConfigureTestServices(s => s.Configure<TripRateLimitOptions>(o =>
+            b.ConfigureTestServices(s => s.Configure<TripRateLimitSettings>(o =>
                 o.PermitLimit = TestRateLimit)));
     }
 

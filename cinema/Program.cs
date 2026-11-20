@@ -15,13 +15,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddOptions<TmdbOptions>()
-    .BindConfiguration(TmdbOptions.SectionName)
+builder.Services.AddOptions<TmdbSettings>()
+    .BindConfiguration(TmdbSettings.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
-builder.Services.AddOptions<TripRateLimitOptions>()
-    .BindConfiguration(TripRateLimitOptions.SectionName)
+builder.Services.AddOptions<TripRateLimitSettings>()
+    .BindConfiguration(TripRateLimitSettings.SectionName)
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
@@ -47,7 +47,7 @@ builder.Services.AddRateLimiter(options =>
     {
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
         var rateLimitOptions = context.RequestServices.
-            GetRequiredService<IOptions<TripRateLimitOptions>>().Value;
+            GetRequiredService<IOptions<TripRateLimitSettings>>().Value;
 
         if (userId is null)
             // Anonymous users are not rate limited yet: https://github.com/EthanBerry638/cinema/issues/2
