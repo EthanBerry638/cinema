@@ -116,10 +116,13 @@ public class TripControllerTests : IAsyncDisposable
         using var other = CreateClientFor(Guid.NewGuid());
 
         for (var i = 0; i < TestRateLimit; i++)
-            await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
-        
+        {
+            using var _ = await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        }
+
         using var greedyLimited = await greedy.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.TooManyRequests, greedyLimited.StatusCode);
+        
         using var response = await other.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
         Assert.NotEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
     }
