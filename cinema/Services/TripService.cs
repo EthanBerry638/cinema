@@ -5,10 +5,10 @@ using Microsoft.Extensions.Options;
 
 namespace cinema.Services;
 
-public class TripService (ITripRepository tripRepository, IOptions<TmdbSettings> tmdbOptions)
+public class TripService (ITripRepository tripRepository, IOptions<TmdbSettings> tmdbSettings)
 {
     private readonly ITripRepository _tripRepository = tripRepository;
-    private readonly string _posterBaseUrl = tmdbOptions.Value.PosterBaseUrl;
+    private readonly string _posterBaseUrl = tmdbSettings.Value.PosterBaseUrl;
     
     public async Task<List<TripSummaryResponse>> MyTrips(Guid userId, CancellationToken ct = default)
     {
