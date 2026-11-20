@@ -15,6 +15,9 @@ public class TripController (TripService tripService) : ControllerBase
 {
     private readonly TripService _tripService = tripService;
     
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     [EnableRateLimiting(TripRateLimitSettings.PolicyName)]
     [HttpGet("/api/me/trips")]
     public async Task<ActionResult<List<TripSummaryResponse>>> MyTrips(CancellationToken ct = default)
