@@ -181,6 +181,22 @@ public class TripControllerTests : IAsyncDisposable
         Assert.Equal(500, problem.Status);
         Assert.False(string.IsNullOrWhiteSpace(problem.Title));
     }
+    
+    [Fact]
+    public async Task MyTrips_ShouldNotLeakExceptionMessage_WhenUnhandledExceptionThrown()
+    {
+        var throwingRepo = new Mock<ITripRepository>();
+        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("a very specific exception message"));
+        using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
+            s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, Guid.NewGuid().ToString());
+        
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        var problem = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        
+        Assert.DoesNotContain("a very specific exception message", problem);
+    }
 
     public ValueTask DisposeAsync() => _baseFactory.DisposeAsync();
 
