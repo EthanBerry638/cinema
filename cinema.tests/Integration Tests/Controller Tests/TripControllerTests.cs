@@ -185,17 +185,21 @@ public class TripControllerTests : IAsyncDisposable
     [Fact]
     public async Task MyTrips_ShouldNotLeakExceptionMessage_WhenUnhandledExceptionThrown()
     {
+        var exceptionMessage = "a very specific exception message";
         var throwingRepo = new Mock<ITripRepository>();
         throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("a very specific exception message"));
+            .ThrowsAsync(new Exception(exceptionMessage));
         using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
             s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, Guid.NewGuid().ToString());
         
         using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
-        var problem = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         
-        Assert.DoesNotContain("a very specific exception message", problem);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        
+        Assert.DoesNotContain(exceptionMessage, body);
     }
 
     public ValueTask DisposeAsync() => _baseFactory.DisposeAsync();
