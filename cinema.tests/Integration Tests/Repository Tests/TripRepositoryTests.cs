@@ -105,4 +105,25 @@ public class TripRepositoryTests(PostgresFixture fixture)
         
         Assert.Equal([yesterdaysTrip1.Id, yesterdaysTrip2.Id, yesterdaysTrip3.Id], result.Select(t => t.Id));
     }
+
+    [Fact]
+    public async Task MyTrips_ShouldReturn2MostRecentTrips_WhenOnly2TripsAreAskedFor()
+    {
+        var user = TestData.NewUser();
+        var movie = TestData.NewMovie("Test Movie");
+        var trip1 = TestData.NewTrip(user.Id, movie.Id, DateTime.UtcNow.AddDays(-1));
+        var trip2 = TestData.NewTrip(user.Id, movie.Id, DateTime.UtcNow.AddDays(-3));
+        var trip3 = TestData.NewTrip(user.Id, movie.Id, DateTime.UtcNow.AddDays(-5));
+        await _fixture.SeedAsync(
+            users: [user],
+            movies: [movie],
+            trips: [trip1, trip2, trip3]);
+        
+        await using var db = _fixture.CreateDbContext();
+        var repository = new TripRepository(db);
+        
+        var result = await repository.MyTrips(user.Id, 2, TestContext.Current.CancellationToken);
+        
+        Assert.Equal([trip1.Id, trip2.Id], result.Select(t => t.Id));
+    }
 }
