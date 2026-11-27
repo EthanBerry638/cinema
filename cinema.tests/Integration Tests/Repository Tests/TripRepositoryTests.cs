@@ -25,7 +25,7 @@ public class TripRepositoryTests(PostgresFixture fixture)
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
 
-        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
+        var result = await repository.MyTrips(user.Id, 3, TestContext.Current.CancellationToken);
 
         Assert.Equal([newerTrip.Id, olderTrip.Id], result.Select(t => t.Id));
 
@@ -63,7 +63,7 @@ public class TripRepositoryTests(PostgresFixture fixture)
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
 
-        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
+        var result = await repository.MyTrips(user.Id, 1, TestContext.Current.CancellationToken);
 
         Assert.Empty(result);
     }
@@ -76,7 +76,7 @@ public class TripRepositoryTests(PostgresFixture fixture)
         var repository = new TripRepository(db);
 
         await Assert.ThrowsAsync<OperationCanceledException>(
-            () => repository.MyTrips(Guid.NewGuid(), ct));
+            () => repository.MyTrips(Guid.NewGuid(), 1, ct));
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class TripRepositoryTests(PostgresFixture fixture)
         await using var db = _fixture.CreateDbContext();
         var repository = new TripRepository(db);
         
-        var result = await repository.MyTrips(user.Id, TestContext.Current.CancellationToken);
+        var result = await repository.MyTrips(user.Id, 3, TestContext.Current.CancellationToken);
         
         Assert.Equal([yesterdaysTrip1.Id, yesterdaysTrip2.Id, yesterdaysTrip3.Id], result.Select(t => t.Id));
     }

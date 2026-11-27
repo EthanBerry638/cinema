@@ -164,7 +164,7 @@ public class TripControllerTests : IAsyncDisposable
     public async Task MyTrips_ShouldReturn500ProblemDetails_WhenUnhandledExceptionThrown()
     {
         var throwingRepo = new Mock<ITripRepository>();
-        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), 0, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception());
         using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
             s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();
@@ -187,7 +187,7 @@ public class TripControllerTests : IAsyncDisposable
     {
         var exceptionMessage = "a very specific exception message";
         var throwingRepo = new Mock<ITripRepository>();
-        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), 0, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception(exceptionMessage));
         using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
             s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();

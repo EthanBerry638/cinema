@@ -12,7 +12,7 @@ public class TripService (ITripRepository tripRepository, IOptions<TmdbSettings>
     
     public async Task<List<TripSummaryResponse>> MyTrips(Guid userId, CancellationToken ct = default)
     {
-        var trips = await _tripRepository.MyTrips(userId, ct);
+        var trips = await _tripRepository.MyTrips(userId, 0, ct);
 
         return trips.Select(t => new TripSummaryResponse(
             t.Id, t.MovieId, t.Title, BuildPosterUrl(t.PosterPath), t.WatchedAt, t.CinemaName,
