@@ -5,10 +5,14 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using cinema.DTOs;
 using cinema.Models;
+using cinema.Repositories;
 using cinema.Settings;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 
 namespace cinema.tests.Integration_Tests.Controller_Tests;
 
@@ -154,6 +158,48 @@ public class TripControllerTests : IAsyncDisposable
         
         Assert.Equal(JsonValueKind.String, node!.GetValueKind());
         Assert.Equal("Dolby", node.GetValue<string>());
+    }
+
+    [Fact]
+    public async Task MyTrips_ShouldReturn500ProblemDetails_WhenUnhandledExceptionThrown()
+    {
+        var throwingRepo = new Mock<ITripRepository>();
+        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception());
+        using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
+            s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, Guid.NewGuid().ToString());
+        
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken);
+
+        Assert.NotNull(problem);
+        Assert.Equal(500, problem.Status);
+        Assert.False(string.IsNullOrWhiteSpace(problem.Title));
+    }
+    
+    [Fact]
+    public async Task MyTrips_ShouldNotLeakExceptionMessage_WhenUnhandledExceptionThrown()
+    {
+        var exceptionMessage = "a very specific exception message";
+        var throwingRepo = new Mock<ITripRepository>();
+        throwingRepo.Setup(r => r.MyTrips(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception(exceptionMessage));
+        using var client = _factory.WithWebHostBuilder(b => b.ConfigureTestServices(s =>
+            s.RemoveAll<ITripRepository>().AddScoped(_ => throwingRepo.Object))).CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, Guid.NewGuid().ToString());
+        
+        using var response = await client.GetAsync(MyTripsUrl, TestContext.Current.CancellationToken);
+        
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        
+        Assert.DoesNotContain(exceptionMessage, body);
     }
 
     public ValueTask DisposeAsync() => _baseFactory.DisposeAsync();
